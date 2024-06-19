@@ -1,0 +1,72 @@
+version: '3'
+
+services:
+  frontend:
+    build: ./frontend
+    # image: ${CI_REGISTRY_USER:-default_user}/xdpets_frontend:${CI_COMMIT_REF_SLUG:-latest}
+    #image: seco1024/xdpets_frontend:main
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: always
+
+  backend:
+    build: ./backend
+    # image: ${CI_REGISTRY_USER:-default_user}/xdpets_backend:${CI_COMMIT_REF_SLUG:-latest}
+    #image: seco1024/xdpets_backend:main
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./backend/backend/.env
+    depends_on:
+      - redis
+    restart: always
+
+  redis:
+    image: redis:6.2
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: always
+
+  celery:
+    build: ./backend
+    # image: ${CI_REGISTRY_USER:-default_user}/xdpets_celery:${CI_COMMIT_REF_SLUG:-latest}
+    #image: seco1024/xdpets_celery:main
+    command: celery -A backend worker --loglevel=info
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./backend/backend/.env
+    depends_on:
+      - redis
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    restart: always
+
+  celery-beat:
+    build: ./backend
+    command: celery -A backend beat --loglevel=info
+    # image: ${CI_REGISTRY_USER:-default_user}/xdpets_celery-beat:${CI_COMMIT_REF_SLUG:-latest}
+    #image: seco1024/xdpets_celery-beat:main
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./backend/backend/.env
+    depends_on:
+      - redis
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    restart: always
+
+
+  migrate:
+    build: ./backend
+    command: python manage.py makemigrations && python manage.py migrate
+    volumes:
+      - ./backend:/code
