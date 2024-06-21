@@ -65,8 +65,8 @@ services:
     restart: always
 
 
-  migrate:
-    build: ./backend
-    command: python manage.py makemigrations && python manage.py migrate
-    volumes:
-      - ./backend:/code
+  # migrate:
+  #   build: ./backend
+  #   command: python manage.py makemigrations && python manage.py migrate
+  #   volumes:
+  #     - ./backend:/code

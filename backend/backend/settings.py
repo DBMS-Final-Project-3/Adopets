@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
-import dotenv
+import dotenv 
 
 # 讀取 .env 文件
 dotenv.load_dotenv()
